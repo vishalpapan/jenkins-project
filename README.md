@@ -1,105 +1,113 @@
-CI/CD with Docker, SonarQube, Argo CD, and Kubernetes
+#  Jenkins CI/CD Pipeline with GitOps
 
-This project demonstrates how to build and deploy a Java Maven application using Docker, run code quality checks with SonarQube, and manage deployments using Argo CD with Kubernetes manifests.
+![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-Pipeline-brightgreen)
+![Jenkins](https://img.shields.io/badge/Jenkins-Latest-blue)
+![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
+![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-orange)
+![SonarQube](https://img.shields.io/badge/SonarQube-Code%20Quality-green)
 
-🚀 Workflow Overview
+Complete end-to-end CI/CD pipeline for Java Spring Boot application with Jenkins, SonarQube, Docker, and ArgoCD using GitOps methodology.
 
-Code → Java + Maven project stored in GitHub
+##  Overview
 
-Build & Package → Docker image creation
+Automated pipeline that takes your Java code from commit to production:
+```
+Code Push → Jenkins Build → SonarQube Analysis → Docker Image → ArgoCD Deploy → Kubernetes
+```
 
-Code Quality Check → SonarQube analysis
+## Tech Stack
 
-Push Image → Push Docker image to Docker Hub
+- **CI/CD**: Jenkins with Pipeline-as-Code
+- **Code Quality**: SonarQube 
+- **Containerization**: Docker & Docker Hub
+- **GitOps**: ArgoCD
+- **Orchestration**: Kubernetes/Minikube
+- **Build**: Maven + Java 17
 
-Deploy → Use Kubernetes Deployment manifests
+## Prerequisites
 
-Continuous Delivery → Argo CD syncs changes to cluster
+* Java application code hosted on a Git repository
+* Jenkins server
+* Kubernetes cluster
+* ArgoCD
+* SonarQube server
+* Docker Hub account
 
-🖼️ Architecture
+##  Pipeline Stages
 
-📌 Block diagram placeholder here (upload image)
+| Stage | Action | Tool |
+|-------|--------|------|
+| 1️⃣ **Checkout** | Clone source code from Git | Git Plugin |
+| 2️⃣ **Build & Test** | Build Java application using Maven | Maven Integration |
+| 3️⃣ **Code Quality** | Run SonarQube analysis | SonarQube Scanner |
+| 4️⃣ **Docker Build** | Package application into container | Docker |
+| 5️⃣ **Push Image** | Upload image to Docker Hub | Docker Registry |
+| 6️⃣ **Update Manifests** | Update Kubernetes deployment files | Git |
+| 7️⃣ **GitOps Deploy** | Deploy to production using ArgoCD | ArgoCD |
 
-⚙️ Setup Instructions
-1. Prerequisites
+##  Jenkins Configuration
 
-Docker installed and running
+### Required Jenkins Plugins:
+- Git plugin
+- Maven Integration plugin
+- Pipeline plugin
+- Docker Pipeline plugin
+- SonarQube Scanner plugin
 
-Kubernetes cluster (Minikube, Kind, or any cloud K8s)
+### Required Credentials:
+- `docker-cred`: Docker Hub username/password
+- `github`: GitHub personal access token
+- `sonarqube`: SonarQube authentication token
 
-Argo CD installed in the cluster
+##  Pipeline Flow
 
-SonarQube server running
+```groovy
+pipeline {
+  agent {
+    docker {
+      image 'maven:3.9.6-eclipse-temurin-17'
+      args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
+    }
+  }
+  stages {
+    stage('Checkout') { ... }
+    stage('Build and Test') { ... }
+    stage('Static Code Analysis') { ... }
+    stage('Build and Push Docker Image') { ... }
+    stage('Update Deployment File') { ... }
+  }
+}
+```
 
-Docker Hub / GitHub access tokens for authentication
+##  How to Use
 
-2. Build & Push Docker Image
-# Build the image
-docker build -t <dockerhub-username>/<app-name>:v1 .
+1. **Configure Jenkins Pipeline**:
+   - Create new pipeline job in Jenkins
+   - Connect to your Git repository
+   - Add required credentials
+   
+2. **Set up ArgoCD Application**:
+   - Point ArgoCD to your Git repository
+   - Configure sync policy for automatic deployments
+   
+3. **Run the Pipeline**:
+   - Push code changes to trigger the pipeline
+   - Monitor progress through Jenkins UI
+   - Verify deployment in ArgoCD dashboard
 
-# Login to Docker Hub
-docker login
+##  Monitoring
 
-# Push the image
-docker push <dockerhub-username>/<app-name>:v1
+- **Jenkins**: Pipeline execution and build status
+- **SonarQube**: Code quality metrics and reports  
+- **ArgoCD**: Deployment status and application health
+- **Kubernetes**: Application pods and services status
 
-3. Run SonarQube Analysis
-mvn clean verify sonar:sonar \
-  -Dsonar.projectKey=<project-key> \
-  -Dsonar.host.url=http://<sonarqube-url> \
-  -Dsonar.login=<sonarqube-token>
+##  Key Features
 
-4. Kubernetes Deployment Manifests
+- ✅ **Automated CI/CD** - Complete automation from code to production
+- ✅ **Code Quality Gates** - SonarQube integration for quality assurance
+- ✅ **GitOps Deployment** - ArgoCD for declarative deployments
+- ✅ **Containerized Builds** - Docker-based pipeline agents
+- ✅ **Scalable Architecture** - Production-ready Kubernetes deployment
 
-📂 k8s-manifests/ contains:
-
-deployment.yaml – Defines application Deployment & Pods
-
-service.yaml – Exposes app via ClusterIP/NodePort/LoadBalancer
-
-Apply manifests manually:
-
-kubectl apply -f k8s-manifests/
-
-5. Argo CD Setup
-
-Create a new Argo CD Application:
-
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: java-maven-app
-  namespace: argocd
-spec:
-  destination:
-    namespace: default
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    repoURL: https://github.com/<your-username>/<repo-name>.git
-    path: k8s-manifests
-    targetRevision: HEAD
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-
-
-Apply it:
-
-kubectl apply -f argocd-application.yaml -n argocd
-
-
-Argo CD will continuously sync Git changes to the cluster.
-
-✅ Tech Stack
-
-Java + Maven – Build and package app
-
-Docker – Containerize application
-
-SonarQube – Code quality checks
-
-Kubernetes – Deployment & Service manifests
-
-Argo CD – GitOps-based deployment
+---
